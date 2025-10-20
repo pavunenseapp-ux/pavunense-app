@@ -1,98 +1,178 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+//import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  ActivityIndicator,
+  ScrollView,
+  Image,
+} from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type Notification = {
+  title?: string;
+  body?: string;
+  link?: string;
+  [key: string]: any;
+};
 
-export default function HomeScreen() {
+export default function App() {
+  const emailLoginURL = 'https://mail.google.com/';
+  const driveFolderURL = 'https://drive.google.com/drive/folders/18DKtlWH1lVIL61p-dy6CR8hx6BQ24GPZ?usp=sharing';
+
+  const [notificacoes, setNotificacoes] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchNotificacoes = () => {
+    setLoading(true);
+    fetch("https://raw.githubusercontent.com/pavunenseapp-ux/push.app_pavunense/refs/heads/main/push.json")
+      .then(response => response.json())
+      .then(data => {
+        setNotificacoes(data.notificacoes || []);
+      })
+      .catch(error => {
+        console.error("Erro ao buscar JSON:", error);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchNotificacoes();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaProvider style={styles.safeArea}>
+        <View style={[styles.container, { justifyContent: 'center' }]}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaProvider style={styles.safeArea} >
+      <View style={styles.container}>
+        <Text style={styles.title}>App Pavunense</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.icons}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => Linking.openURL(emailLoginURL)}
+          >
+            <Image
+              source={{ uri: 'https://img.icons8.com/fluency/96/000000/email.png' }}
+              style={styles.icon}
+            />
+            <Text style={styles.iconText}>Login Email</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => Linking.openURL(driveFolderURL)}
+          >
+            <Image
+              source={{ uri: 'https://img.icons8.com/fluency/96/000000/google-drive.png' }}
+              style={styles.icon}
+            />
+            <Text style={styles.iconText}>Google Drive</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 🔁 Botão de atualizar notificações */}
+        <TouchableOpacity style={styles.refreshButton} onPress={fetchNotificacoes}>
+          <Text style={styles.refreshText}>🔄 Atualizar Notificações</Text>
+        </TouchableOpacity>
+
+        <ScrollView style={{ width: '100%' }}>
+          {notificacoes.length === 0 && (
+            <Text style={styles.noNotificationsText}>Nenhuma notificação disponível.</Text>
+          )}
+
+          {notificacoes.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.notificationCard}
+              onPress={() => item.link ? Linking.openURL(item.link) : undefined}
+            >
+              <Text style={styles.notificationTitle}>{item.title}</Text>
+              <Text style={styles.notificationBody}>{item.body ?? ''}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+      </View>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safeArea: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, alignItems: 'center', padding: 10 },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    color: '#333',
+    textAlign: 'center',
+  },
+  icons: {
+    width: '100%',
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+  },
+  iconButton: {
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  icon: {
+    width: 48,
+    height: 48,
+    marginBottom: 6,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  iconText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  notificationCard: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  notificationTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 6,
+  },
+  notificationBody: {
+    fontSize: 14,
+    color: '#555',
+  },
+  noNotificationsText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#999',
+  },
+
+  // 🔁 Estilo do botão de refresh
+  refreshButton: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+  },
+  refreshText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });

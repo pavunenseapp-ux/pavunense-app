@@ -8,28 +8,55 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const tintColor = Colors[colorScheme ?? 'light'].tint;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: tintColor,
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="index" // Corrigido de "home" para "index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => (
+            <IconSymbol name="house" color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="ponto"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Ponto',
+          tabBarIcon: ({ color, size }) => (
+            <IconSymbol name="clock" color={color} size={size ?? 24} />
+          ),
         }}
       />
+
+      <Tabs.Screen
+        name="utilidade"
+        options={{
+          title: 'Utilidade publica',
+          tabBarIcon: ({ color, size }) => (
+             <IconSymbol name="clock" color={color} size={size ?? 24} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="sobre-nos"
+        options={{
+          title: 'Sobre Nós',
+          tabBarIcon: ({ color, size }) => (
+            <IconSymbol name="info" color={color} size={size ?? 24} />
+          ),
+        }}
+      />
+
     </Tabs>
   );
 }
